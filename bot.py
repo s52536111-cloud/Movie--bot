@@ -1,5 +1,8 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+API_ID = 28289691  # Make sure there are no quotes around the number
+API_HASH = "475de3b22b9066c0b1e4fd023a8a5da1"
+BOT_TOKEN = "8658439095:AAGTbzG0sU98KTRUYOk0P4zUoH03Rk_rUO4"
 
 # 1. DEFINE YOUR VARIABLES FIRST
 API_ID = int("28289691")
