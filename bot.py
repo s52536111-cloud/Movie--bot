@@ -1,11 +1,11 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_ID = int("YOUR_API_ID")
-API_HASH = "YOUR_API_HASH"
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-CHANNEL_ID = int(-100XXXXXXXXXX)
-FORCE_CHANNEL = "yourchannelusername"
+API_ID = int("38289691")
+API_HASH = "475de3b22b9066c0b1e4fd023a8a5da1"
+BOT_TOKEN = "8658439095:AAGTbzG0sU98KTRUYOk0P4zUoH03Rk_rUO4"
+CHANNEL_ID = int(-1003995784518)
+FORCE_CHANNEL = "@utopiaez"
 
 bot = Client("movie-bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
