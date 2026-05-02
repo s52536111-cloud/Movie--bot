@@ -1,46 +1,80 @@
+import os
+import requests
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-API_ID = 28289691  # Make sure there are no quotes around the number
-API_HASH = "475de3b22b9066c0b1e4fd023a8a5da1"
-BOT_TOKEN = "8658439095:AAGTbzG0sU98KTRUYOk0P4zUoH03Rk_rUO4"
 
-# 1. DEFINE YOUR VARIABLES FIRST
-API_ID = int("28289691")
-API_HASH = "475de3b22b9066c0b1e4fd023a8a5da1"
-BOT_TOKEN = "8658439095:AAGTbzG0sU98KTRUYOk0P4zUoH03Rk_rUO4"
-CHANNEL_ID = int(-1003995784518)
-FORCE_CHANNEL = "utopiaez"
+# 🔐 ENV VARIABLES
+API_ID = int(os.getenv("38289691"))
+API_HASH = os.getenv("475de3b22b9066c0b1e4fd023a8a5da1")
+BOT_TOKEN = os.getenv("8658439095:AAGTbzG0sU98KTRUYOk0P4zUoH03Rk_rUO4")
+CHANNEL = os.getenv("@utopiaez")  # example: @yourchannel
+OMDB_API = os.getenv("de23856a")
 
-# 2. NOW CREATE THE CLIENT
-bot = Client(
-    "movie-bot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
-    in_memory=True
-)
+app = Client("movie_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-@bot.on_message(filters.command("start"))
+# 🔐 Force Join Check
+async def is_joined(client, user_id):
+    try:
+        member = await client.get_chat_member(CHANNEL, user_id)
+        return member.status in ["member", "administrator", "creator"]
+    except:
+        return False
+
+# 🚫 Not Joined Message
+def join_button():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("📢 Join Channel", url=f"https://t.me/{CHANNEL.replace('@','')}")]
+    ])
+
+# 👋 Start Command
+@app.on_message(filters.command("start"))
 async def start(client, message):
     user_id = message.from_user.id
 
-    try:
-        await client.get_chat_member(FORCE_CHANNEL, user_id)
-    except Exception:
+    if not await is_joined(client, user_id):
         return await message.reply(
-            "🚫 ആദ്യം ചാനൽ ജോയിൻ ചെയ്യണം!",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("📢 Join Channel", url=f"https://t.me/{FORCE_CHANNEL}")]]
-            )
+            "🔒 ആദ്യം നമ്മുടെ ചാനലിൽ join ചെയ്യണം!",
+            reply_markup=join_button()
         )
 
-    if len(message.command) > 1:
-        file_id = message.command[1]
-        try:
-            await client.copy_message(message.chat.id, CHANNEL_ID, int(file_id))
-        except Exception as e:
-            await message.reply(f"Error: {e}")
-    else:
-        await message.reply("Send movie ID 🎬")
+    await message.reply("👋 സ്വാഗതം! Use /movie <name>")
 
-bot.run()
+# 🎬 Movie Search
+@app.on_message(filters.command("movie"))
+async def movie(client, message):
+    user_id = message.from_user.id
+
+    if not await is_joined(client, user_id):
+        return await message.reply(
+            "🔒 ആദ്യം join ചെയ്യണം!",
+            reply_markup=join_button()
+        )
+
+    if len(message.command) < 2:
+        return await message.reply("❗ Usage: /movie KGF")
+
+    query = " ".join(message.command[1:])
+    url = f"http://www.omdbapi.com/?apikey={OMDB_API}&t={query}"
+
+    res = requests.get(url).json()
+
+    if res.get("Response") == "False":
+        return await message.reply("❌ Movie not found")
+
+    text = f"""🎬 {res.get('Title')}
+📅 Year: {res.get('Year')}
+⭐ IMDb: {res.get('imdbRating')}
+🎭 Genre: {res.get('Genre')}
+
+📝 {res.get('Plot')}
+"""
+
+    poster = res.get("Poster")
+
+    if poster and poster != "N/A":
+        await message.reply_photo(photo=poster, caption=text)
+    else:
+        await message.reply(text)
+
+# ▶️ Run
+app.run()
